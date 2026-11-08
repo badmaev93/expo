@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useWsStatus } from '../core/useRealtime'
+import { get as getPlugin } from '../core/registry'
 import PerfBadge from './PerfBadge'
 import Notifications from './Notifications'
 
@@ -80,11 +81,25 @@ function TopNav({
   canUndo, canRedo, onUndo, onRedo,
   onLayouts, onKiosk,
   theme, onToggleTheme,
-  searchQuery, onSearch, searchResults, onPickResult,
+  currentPage, onPickResult,
   watchChannels,
 }) {
+  const [searchQuery, setSearchQuery] = useState('')
   const status = useWsStatus()
   const live = status === 'open'
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q || !currentPage) return []
+    return currentPage.widgets
+      .map(w => {
+        const plugin = getPlugin(w.type)
+        const title = w.props?.title || w.props?.label || w.props?.text || w.props?.name || plugin?.name || w.type
+        return { id: w.id, title, typeName: plugin?.name || w.type }
+      })
+      .filter(r => r.title.toLowerCase().includes(q) || r.typeName.toLowerCase().includes(q))
+      .slice(0, 12)
+  }, [searchQuery, currentPage])
 
   const iconBtn = (icon, action, disabled, title) => (
     <button onClick={action} disabled={disabled} title={title}
@@ -137,8 +152,8 @@ function TopNav({
         <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[14px] pointer-events-none"
           style={{ color: 'var(--text-muted)' }}>search</span>
         <input
-          value={searchQuery || ''}
-          onChange={e => onSearch?.(e.target.value)}
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
           placeholder="Поиск виджетов на холсте…"
           className="w-64 rounded-full py-1.5 pl-8 pr-3 text-[13px] outline-none transition-all"
           style={{ background: 'var(--bg-container)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
@@ -146,7 +161,7 @@ function TopNav({
           onBlur={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
         />
         {searchQuery && (
-          <button onClick={() => onSearch?.('')} className="absolute right-2 top-1/2 -translate-y-1/2"
+          <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2"
             style={{ color: 'var(--text-muted)' }}>
             <span className="material-symbols-outlined text-[14px]">close</span>
           </button>
@@ -154,7 +169,7 @@ function TopNav({
         {searchQuery && (
           <div className="absolute top-full right-0 mt-1.5 w-72 max-h-72 overflow-y-auto rounded-xl p-1.5 z-50 glass-strong">
             {searchResults?.length ? searchResults.map(r => (
-              <button key={r.id} onMouseDown={e => { e.preventDefault(); onPickResult?.(r.id) }}
+              <button key={r.id} onMouseDown={e => { e.preventDefault(); onPickResult?.(r.id); setSearchQuery('') }}
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors"
                 onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-container)'}
                 onMouseLeave={e => e.currentTarget.style.background = ''}>

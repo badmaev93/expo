@@ -126,7 +126,6 @@ function Editor({ config, setConfig, undo, redo, canUndo, canRedo, onKiosk }) {
   const [showLayouts, setShowLayouts] = useState(false)
   const [leftTab, setLeftTab] = useState(null)
   const [showProps, setShowProps] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
   const [dialog, setDialog] = useState(null)
   const { theme, toggle: toggleTheme } = useTheme()
   const canvasAreaRef = useRef(null)
@@ -150,19 +149,6 @@ function Editor({ config, setConfig, undo, redo, canUndo, canRedo, onKiosk }) {
         widget: w.props?.title || w.props?.label || getPlugin(w.type)?.name || w.type,
       }))
   }, [currentPage])
-
-  const searchResults = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q || !currentPage) return []
-    return currentPage.widgets
-      .map(w => {
-        const plugin = getPlugin(w.type)
-        const title = w.props?.title || w.props?.label || w.props?.text || w.props?.name || plugin?.name || w.type
-        return { id: w.id, title, typeName: plugin?.name || w.type }
-      })
-      .filter(r => r.title.toLowerCase().includes(q) || r.typeName.toLowerCase().includes(q))
-      .slice(0, 12)
-  }, [searchQuery, currentPage])
 
   useEffect(() => {
     if (!config.pages.find(p => p.id === currentPageId)) {
@@ -319,10 +305,8 @@ function Editor({ config, setConfig, undo, redo, canUndo, canRedo, onKiosk }) {
         onKiosk={() => onKiosk(currentPage?.id)}
         theme={theme}
         onToggleTheme={toggleTheme}
-        searchQuery={searchQuery}
-        onSearch={setSearchQuery}
-        searchResults={searchResults}
-        onPickResult={id => { setSelectedId(id); setShowProps(true); setSearchQuery('') }}
+        currentPage={currentPage}
+        onPickResult={id => { setSelectedId(id); setShowProps(true) }}
         watchChannels={watchChannels}
       />
 
