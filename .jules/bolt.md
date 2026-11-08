@@ -1,0 +1,3 @@
+## 2024-11-07 - React State Optimization & Event Throttling
+**Learning:** React state that updates frequently (like search inputs on every keystroke) located high up in the component tree (e.g. `Editor`) causes expensive re-renders of the entire tree. Additionally, rapid events like `mousemove` that trigger state updates can flood the main thread.
+**Action:** When finding frequent state updates, always push the state as far down the component tree as possible (e.g., move search state into the `TopNav` component). Always throttle high-frequency DOM events (like `mousemove`) if they trigger state updates or manipulate timers (e.g., using a `useRef` for a timestamp check).

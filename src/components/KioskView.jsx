@@ -22,11 +22,15 @@ function KioskView({ config, initialPageId, onExit }) {
     }
   }, [onExit])
 
+  const lastPoke = useRef(0)
   useEffect(() => {
     const poke = () => {
-      setChromeVisible(true)
-      clearTimeout(hideTimer.current)
-      hideTimer.current = setTimeout(() => setChromeVisible(false), 3000)
+      if (Date.now() - lastPoke.current > 100) {
+        lastPoke.current = Date.now()
+        setChromeVisible(true)
+        clearTimeout(hideTimer.current)
+        hideTimer.current = setTimeout(() => setChromeVisible(false), 3000)
+      }
     }
     poke()
     window.addEventListener('mousemove', poke)
