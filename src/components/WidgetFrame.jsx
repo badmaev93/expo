@@ -80,6 +80,7 @@ function WidgetFrame({ widget, selected, editable, onSelect, onOpenProps, onRemo
             onMouseEnter={e => { e.currentTarget.style.background = 'color-mix(in srgb, var(--accent) 15%, var(--bg-panel))' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-widget-action)' }}
             title="Свойства"
+            aria-label="Свойства"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>tune</span>
           </button>
@@ -91,6 +92,7 @@ function WidgetFrame({ widget, selected, editable, onSelect, onOpenProps, onRemo
               onMouseEnter={e => { e.currentTarget.style.background = 'color-mix(in srgb, var(--accent) 15%, var(--bg-panel))' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-widget-action)' }}
               title="Дублировать"
+              aria-label="Дублировать"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>content_copy</span>
             </button>
@@ -102,6 +104,7 @@ function WidgetFrame({ widget, selected, editable, onSelect, onOpenProps, onRemo
             onMouseEnter={e => { e.currentTarget.style.color = 'var(--error-text)'; e.currentTarget.style.background = 'rgba(239,68,68,0.15)' }}
             onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'var(--bg-widget-action)' }}
             title="Удалить"
+            aria-label="Удалить"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>close</span>
           </button>

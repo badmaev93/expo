@@ -124,7 +124,7 @@ function Notifications({ channels }) {
 
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen(v => !v)} title="Оповещения"
+      <button onClick={() => setOpen(v => !v)} title="Оповещения" aria-label="Оповещения"
         className="relative flex h-8 w-8 items-center justify-center rounded-lg transition-all"
         style={{
           color: hasAlerts ? 'var(--warning-text)' : open ? 'var(--accent-text)' : 'var(--text-secondary)',
@@ -205,7 +205,7 @@ function Notifications({ channels }) {
                     style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: 'var(--accent-text)' }}>
                     ntfy.sh/{topic || '…'}
                   </a>
-                  <button onClick={copyLink} title="Копировать ссылку"
+                  <button onClick={copyLink} title="Копировать ссылку" aria-label="Копировать ссылку"
                     className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-colors"
                     style={{ background: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', color: copied ? 'var(--success)' : 'var(--text-secondary)' }}>
                     <span className="material-symbols-outlined text-[13px]">{copied ? 'check' : 'content_copy'}</span>
