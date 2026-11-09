@@ -53,15 +53,25 @@ function DraggablePropsPanel({ selected, currentPage, onUpdate, onRemove, onPage
 
   useEffect(() => {
     if (!dragging) return
+    let frameId = null
     const onMove = e => {
       const d = dragStart.current
       if (!d) return
-      setPos({ x: d.px + e.clientX - d.mx, y: d.py + e.clientY - d.my })
+
+      if (frameId) cancelAnimationFrame(frameId)
+      frameId = requestAnimationFrame(() => {
+        setPos({ x: d.px + e.clientX - d.mx, y: d.py + e.clientY - d.my })
+        frameId = null
+      })
     }
     const onUp = () => setDragging(false)
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp) }
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      if (frameId) cancelAnimationFrame(frameId)
+    }
   }, [dragging])
 
   useEffect(() => {
