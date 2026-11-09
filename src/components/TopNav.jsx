@@ -27,6 +27,7 @@ function SettingsMenu({ onLayouts, theme, onToggleTheme }) {
   return (
     <div ref={ref} className="relative">
       <button onClick={() => setOpen(v => !v)}
+        aria-label="Настройки"
         className="flex h-8 w-8 items-center justify-center rounded-lg transition-all"
         style={{
           color: open ? 'var(--accent-text)' : 'var(--text-secondary)',
@@ -102,7 +103,7 @@ function TopNav({
   }, [searchQuery, currentPage])
 
   const iconBtn = (icon, action, disabled, title) => (
-    <button onClick={action} disabled={disabled} title={title}
+    <button onClick={action} disabled={disabled} title={title} aria-label={title}
       className="flex h-8 w-8 items-center justify-center rounded-lg transition-all disabled:opacity-30"
       style={{ color: 'var(--text-secondary)' }}
       onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = 'color-mix(in srgb, var(--accent) 10%, var(--bg-container))' }}
@@ -161,7 +162,7 @@ function TopNav({
           onBlur={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
         />
         {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2"
+          <button onClick={() => setSearchQuery('')} aria-label="Очистить поиск" className="absolute right-2 top-1/2 -translate-y-1/2"
             style={{ color: 'var(--text-muted)' }}>
             <span className="material-symbols-outlined text-[14px]">close</span>
           </button>
