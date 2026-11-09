@@ -1,0 +1,4 @@
+## 2026-11-09 - [Predictable Notification Topics]
+**Vulnerability:** The notification module (`src/components/Notifications.jsx`) uses `Math.random().toString(36).slice(2, 10)` to generate secret `ntfy.sh` topics.
+**Learning:** `Math.random()` generates cryptographically weak pseudo-random numbers, making it predictable. Since these topics act as a shared secret (a password) to receive sensitive system alerts, an attacker could potentially guess or bruteforce the topic name and subscribe to it, intercepting sensitive system notifications or spoofing fake alerts to the user.
+**Prevention:** Use a Cryptographically Secure Pseudo-Random Number Generator (CSPRNG) like `crypto.randomUUID()` or `crypto.getRandomValues()` for generating random tokens, IDs, or topics that are used for security, authentication, or secret-sharing purposes.

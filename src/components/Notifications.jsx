@@ -8,7 +8,12 @@ const NTFY_PUSH_KEY = 'expo-ntfy-push'
 const NOTIFY_COOLDOWN_MS = 60000
 
 function genTopic() {
-  return 'expo-panel-' + Math.random().toString(36).slice(2, 10)
+  // Use crypto.getRandomValues for a cryptographically secure, unguessable topic name
+  // It works across all contexts, including non-secure (HTTP LAN)
+  const array = new Uint32Array(4)
+  crypto.getRandomValues(array)
+  const randomStr = Array.from(array).map(n => n.toString(36)).join('')
+  return 'expo-panel-' + randomStr.slice(0, 16)
 }
 
 function fmtAge(sec) {
