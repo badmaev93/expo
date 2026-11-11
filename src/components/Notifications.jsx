@@ -8,7 +8,12 @@ const NTFY_PUSH_KEY = 'expo-ntfy-push'
 const NOTIFY_COOLDOWN_MS = 60000
 
 function genTopic() {
-  return 'expo-panel-' + Math.random().toString(36).slice(2, 10)
+  // Use crypto.getRandomValues instead of Math.random for cryptographically secure topics,
+  // as the topic acts as a secret key on the public ntfy.sh server.
+  // Note: using getRandomValues over crypto.randomUUID() to maintain compatibility in HTTP LAN contexts.
+  const array = new Uint32Array(2);
+  crypto.getRandomValues(array);
+  return 'expo-panel-' + array[0].toString(36) + array[1].toString(36);
 }
 
 function fmtAge(sec) {
