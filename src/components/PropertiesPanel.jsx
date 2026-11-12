@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { get } from '../core/registry'
 import { useWsStatus } from '../core/useRealtime'
 
@@ -32,12 +32,41 @@ function Divider({ label }) {
 }
 
 function Field({ field, value, onChange }) {
+  const [draft, setDraft] = useState(value)
+  const timer = useRef(null)
+
+  // Only sync from parent if the input is not currently focused or if the parent's value fundamentally changes
+  // A simpler approach is just to sync only once, but then external changes won't reflect.
+  // We can track if the component is mounted, or use a separate ref to know if the value change came from our own debounce.
+  const lastValue = useRef(value)
+  useEffect(() => {
+    if (lastValue.current !== value) {
+       setDraft(value)
+       lastValue.current = value
+    }
+  }, [value])
+
+  const handleChange = (v) => {
+    setDraft(v)
+    lastValue.current = v // prevent the effect from overwriting what we just typed
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = setTimeout(() => {
+      onChange(v)
+    }, 300)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current)
+    }
+  }, [])
+
   const id = `f_${field.key}`
-  if (field.type === 'textarea') return <Lbl id={id} label={field.label}><textarea id={id} rows={3} value={value??''} onChange={e=>onChange(e.target.value)} className={inputCls} style={{resize:'vertical',minHeight:'64px',maxHeight:'320px'}}/></Lbl>
+  if (field.type === 'textarea') return <Lbl id={id} label={field.label}><textarea id={id} rows={3} value={draft??''} onChange={e=>handleChange(e.target.value)} className={inputCls} style={{resize:'vertical',minHeight:'64px',maxHeight:'320px'}}/></Lbl>
   if (field.type === 'select') return (
     <Lbl id={id} label={field.label}>
       <div className="relative">
-        <select id={id} value={value??''} onChange={e=>onChange(e.target.value)} className={inputCls+' appearance-none pr-8'}>
+        <select id={id} value={draft??''} onChange={e=>handleChange(e.target.value)} className={inputCls+' appearance-none pr-8'}>
           {field.options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none" style={{color:'var(--text-muted)'}}>unfold_more</span>
@@ -46,32 +75,32 @@ function Field({ field, value, onChange }) {
   )
   if (field.type === 'boolean') return (
     <Lbl id={id} label={field.label} inline>
-      <button id={id} onClick={()=>onChange(!value)} className={`flex h-5 w-9 items-center rounded-full px-0.5 transition-colors ${value?'bg-[var(--accent)]':'bg-[rgba(0,0,0,0.15)]'}`}>
-        <span className={`h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${value?'translate-x-4':''}`}/>
+      <button id={id} onClick={()=>handleChange(!draft)} className={`flex h-5 w-9 items-center rounded-full px-0.5 transition-colors ${draft?'bg-[var(--accent)]':'bg-[rgba(0,0,0,0.15)]'}`}>
+        <span className={`h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${draft?'translate-x-4':''}`}/>
       </button>
     </Lbl>
   )
   if (field.type === 'color') return (
     <Lbl id={id} label={field.label}>
       <div className="flex gap-2">
-        <input type="color" id={id} value={value||'#0061A5'} onChange={e=>onChange(e.target.value)} className="h-8 w-10 shrink-0 cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-container)]"/>
-        <input value={value||''} onChange={e=>onChange(e.target.value)} className={inputCls+' font-mono text-xs'}/>
+        <input type="color" id={id} value={draft||'#0061A5'} onChange={e=>handleChange(e.target.value)} className="h-8 w-10 shrink-0 cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-container)]"/>
+        <input value={draft||''} onChange={e=>handleChange(e.target.value)} className={inputCls+' font-mono text-xs'}/>
       </div>
     </Lbl>
   )
-  if (field.type === 'number') return <Lbl id={id} label={field.label}><input type="number" id={id} value={value??''} onChange={e=>onChange(e.target.value===''?'':Number(e.target.value))} className={inputCls+' font-num'}/></Lbl>
+  if (field.type === 'number') return <Lbl id={id} label={field.label}><input type="number" id={id} value={draft??''} onChange={e=>handleChange(e.target.value===''?'':Number(e.target.value))} className={inputCls+' font-num'}/></Lbl>
   if (field.type === 'channel') return (
     <Lbl id={id} label={field.label}>
       <div className="relative">
         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[13px] pointer-events-none" style={{color:'var(--text-muted)'}}>bolt</span>
-        <select id={id} value={value??''} onChange={e=>onChange(e.target.value)} className={inputCls+' pl-8 pr-8 font-mono text-xs appearance-none'}>
+        <select id={id} value={draft??''} onChange={e=>handleChange(e.target.value)} className={inputCls+' pl-8 pr-8 font-mono text-xs appearance-none'}>
           <option value="">— без канала —</option>
           {KNOWN_CHANNELS.map(g=>(
             <optgroup key={g.group} label={g.group}>
               {g.channels.map(ch=><option key={ch} value={ch}>{ch}</option>)}
             </optgroup>
           ))}
-          {value&&!KNOWN_CHANNELS.some(g=>g.channels.includes(value))&&<option value={value}>{value}</option>}
+          {draft&&!KNOWN_CHANNELS.some(g=>g.channels.includes(draft))&&<option value={draft}>{draft}</option>}
         </select>
         <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none" style={{color:'var(--text-muted)'}}>unfold_more</span>
       </div>
@@ -80,12 +109,12 @@ function Field({ field, value, onChange }) {
   if (field.type === 'url') return (
     <Lbl id={id} label={field.label}>
       <div className="flex gap-1.5">
-        <input id={id} value={value??''} onChange={e=>onChange(e.target.value)} placeholder={field.placeholder??'https://'} className={inputCls+' flex-1 font-mono text-xs'}/>
-        {value && !value.startsWith('ws') && <a href={value} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-xl border border-[var(--border-subtle)] px-2" style={{color:'var(--text-secondary)'}}><span className="material-symbols-outlined text-[13px]">open_in_new</span></a>}
+        <input id={id} value={draft??''} onChange={e=>handleChange(e.target.value)} placeholder={field.placeholder??'https://'} className={inputCls+' flex-1 font-mono text-xs'}/>
+        {draft && !draft.startsWith('ws') && <a href={draft} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-xl border border-[var(--border-subtle)] px-2" style={{color:'var(--text-secondary)'}}><span className="material-symbols-outlined text-[13px]">open_in_new</span></a>}
       </div>
     </Lbl>
   )
-  return <Lbl id={id} label={field.label}><input id={id} value={value??''} onChange={e=>onChange(e.target.value)} className={inputCls}/></Lbl>
+  return <Lbl id={id} label={field.label}><input id={id} value={draft??''} onChange={e=>handleChange(e.target.value)} className={inputCls}/></Lbl>
 }
 
 const KNOWN_CHANNELS = [
@@ -126,19 +155,62 @@ function WsSection({ widget, onChange }) {
   const channel = ds.channel || ''
   const status = useWsStatus()
   const ok = status === 'open'
+
+  const [draftWsUrl, setDraftWsUrl] = useState(wsUrl)
+  const [draftChannel, setDraftChannel] = useState(channel)
+  const timerWsUrl = useRef(null)
+  const timerChannel = useRef(null)
+
+  const lastWsUrl = useRef(wsUrl)
+  useEffect(() => {
+    if (lastWsUrl.current !== wsUrl) {
+      setDraftWsUrl(wsUrl)
+      lastWsUrl.current = wsUrl
+    }
+  }, [wsUrl])
+
+  const lastChannel = useRef(channel)
+  useEffect(() => {
+    if (lastChannel.current !== channel) {
+      setDraftChannel(channel)
+      lastChannel.current = channel
+    }
+  }, [channel])
+
   const setDs = (key, val) => onChange(w => ({ ...w, dataSource: { ...(w.dataSource || {}), [key]: val } }))
 
-  const effectiveUrl = wsUrl || 'wss://badmaevoleg.hlab.kz/expo-ws'
+  const handleWsUrlChange = (val) => {
+    setDraftWsUrl(val)
+    lastWsUrl.current = val
+    if (timerWsUrl.current) clearTimeout(timerWsUrl.current)
+    timerWsUrl.current = setTimeout(() => setDs('wsUrl', val), 300)
+  }
+
+  const handleChannelChange = (val) => {
+    setDraftChannel(val)
+    lastChannel.current = val
+    if (timerChannel.current) clearTimeout(timerChannel.current)
+    timerChannel.current = setTimeout(() => setDs('channel', val), 300)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timerWsUrl.current) clearTimeout(timerWsUrl.current)
+      if (timerChannel.current) clearTimeout(timerChannel.current)
+    }
+  }, [])
+
+  const effectiveUrl = draftWsUrl || 'wss://badmaevoleg.hlab.kz/expo-ws'
   const { channels: discoveredChannels, discovering, discover } = useDiscoverChannels(effectiveUrl)
 
   const channelBtn = (ch, fullLabel) => (
-    <button key={ch} onClick={() => setDs('channel', ch)}
+    <button key={ch} onClick={() => handleChannelChange(ch)}
       className="rounded-md px-2 py-0.5 text-[10px] font-mono transition-all"
-      style={ch === channel
+      style={ch === draftChannel
         ? { background: 'color-mix(in srgb, var(--accent) 20%, transparent)', color: 'var(--accent-text)', border: '1px solid color-mix(in srgb, var(--accent) 40%, transparent)' }
         : { background: 'var(--bg-container)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)' }}
-      onMouseEnter={e => ch !== channel && (e.currentTarget.style.color = 'var(--text-primary)')}
-      onMouseLeave={e => ch !== channel && (e.currentTarget.style.color = 'var(--text-muted)')}>
+      onMouseEnter={e => ch !== draftChannel && (e.currentTarget.style.color = 'var(--text-primary)')}
+      onMouseLeave={e => ch !== draftChannel && (e.currentTarget.style.color = 'var(--text-muted)')}>
       {fullLabel || ch.split('.')[1]}
     </button>
   )
@@ -157,12 +229,12 @@ function WsSection({ widget, onChange }) {
           <div className="text-[12px] font-semibold" style={{ color: ok ? 'var(--success)' : 'var(--text-muted)' }}>
             {ok ? 'Подключено' : status === 'connecting' ? 'Подключение…' : 'Нет связи'}
           </div>
-          {wsUrl && <div className="truncate font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{wsUrl}</div>}
+          {draftWsUrl && <div className="truncate font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{draftWsUrl}</div>}
         </div>
       </div>
 
       <Lbl label="Адрес сервера" hint="пусто = глобальный">
-        <input value={wsUrl} onChange={e => setDs('wsUrl', e.target.value)}
+        <input value={draftWsUrl} onChange={e => handleWsUrlChange(e.target.value)}
           placeholder="wss://badmaevoleg.hlab.kz/expo-ws"
           className={inputCls + ' font-mono text-xs'}/>
       </Lbl>
@@ -172,7 +244,7 @@ function WsSection({ widget, onChange }) {
           <div className="relative">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[13px] pointer-events-none"
               style={{ color: 'var(--text-muted)' }}>bolt</span>
-            <input value={channel} onChange={e => setDs('channel', e.target.value)}
+            <input value={draftChannel} onChange={e => handleChannelChange(e.target.value)}
               placeholder="например: metric.visitors"
               className={inputCls + ' pl-8 pr-20 font-mono text-xs'}/>
             <button onClick={discover} disabled={discovering}
