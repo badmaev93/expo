@@ -3,3 +3,6 @@
 **Action:** When finding frequent state updates, always push the state as far down the component tree as possible (e.g., move search state into the `TopNav` component). Always throttle high-frequency DOM events (like `mousemove`) if they trigger state updates or manipulate timers (e.g., using a `useRef` for a timestamp check).## 2026-11-09 - Throttled mousemove in React Editor
 **Learning:** High polling rate mouse devices trigger a huge number of `mousemove` events which can flood the main thread if they update React state directly.
 **Action:** Wrapped the `mousemove` drag state updates in `requestAnimationFrame` within `src/components/Editor.jsx` to limit re-renders to at most once per frame (~60 FPS), significantly reducing CPU overhead during drag.
+## 2026-11-12 - Debounce state updates high in React tree
+**Learning:** High-frequency state updates like input changes in `PropertiesPanel` that lift state upward to the root (`Editor`) cause huge UI freezes and flood the undo/redo history. Wrapping downstream components in `memo` is ineffective if callbacks passed from the parent are created on every render.
+**Action:** Use a local `draft` state for rapid inputs and a `setTimeout` debounce to push the update upwards. Wrap stable callbacks with `useCallback` to make `React.memo` effective for heavy un-updated components.

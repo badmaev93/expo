@@ -168,6 +168,9 @@ function Editor({ config, setConfig, undo, redo, canUndo, canRedo, onKiosk }) {
   }, [config.pages, currentPageId])
 
   const openProps = useCallback((id) => { setSelectedId(id); setShowProps(true) }, [])
+  const handlePickResult = useCallback(id => { setSelectedId(id); setShowProps(true) }, [])
+  const handleShowLayouts = useCallback(() => setShowLayouts(true), [])
+  const handleKiosk = useCallback(() => onKiosk(currentPage?.id), [onKiosk, currentPage?.id])
 
   useEffect(() => {
     if (!leftTab) return
@@ -311,12 +314,12 @@ function Editor({ config, setConfig, undo, redo, canUndo, canRedo, onKiosk }) {
         widgetCount={currentPage?.widgets.length || 0}
         measureKey={measureKey}
         canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo}
-        onLayouts={() => setShowLayouts(true)}
-        onKiosk={() => onKiosk(currentPage?.id)}
+        onLayouts={handleShowLayouts}
+        onKiosk={handleKiosk}
         theme={theme}
         onToggleTheme={toggleTheme}
         currentPage={currentPage}
-        onPickResult={id => { setSelectedId(id); setShowProps(true) }}
+        onPickResult={handlePickResult}
         watchChannels={watchChannels}
       />
 

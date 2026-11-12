@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, memo } from 'react'
 import { useWsStatus } from '../core/useRealtime'
 import { get as getPlugin } from '../core/registry'
 import PerfBadge from './PerfBadge'
@@ -207,4 +207,4 @@ function TopNav({
   )
 }
 
-export default TopNav
+export default memo(TopNav)
